@@ -229,13 +229,14 @@ async fn new(ctx: Context<'_>) -> Result<(), Error> {
 
 #[tokio::main]
 async fn main() {
-    let token = std::env::var("DISCORD_TOKEN").unwrap_or_else(|_| {
-        include_str!("BotToken.txt")
-            .split_whitespace()
-            .next()
-            .expect("BotToken.txt is empty")
-            .to_string()
-    });
+    // Load .env file (if present) so DISCORD_TOKEN can be defined there.
+    dotenv::dotenv().ok();
+    // Retrieve the bot token from the DISCORD_TOKEN environment variable.
+    // The bot token is the same across all guilds; once the bot is invited to a server,
+    // it will operate there automatically. If the variable is missing, abort with a clear message.
+    let token = std::env::var("DISCORD_TOKEN").expect(
+        "DISCORD_TOKEN environment variable not set. Set it to your bot token before running.",
+    );
 
     let intents = serenity::GatewayIntents::non_privileged()
         | serenity::GatewayIntents::GUILD_MESSAGES

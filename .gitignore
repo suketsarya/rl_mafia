@@ -1,3 +1,2 @@
 /target
-/src/BotToken.txt
-/src/GuildToken.txt
+.env

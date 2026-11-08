@@ -132,7 +132,7 @@ pub fn build_leaderboard_embed(
     let mut player_col = String::new();
     let mut points_col = String::new();
 
-    for (i, uid) in ranked.iter().enumerate() {
+    for uid in ranked.iter() {
         let score = scores.get(uid).copied().unwrap_or(0);
         player_col.push_str(&format!("<@{uid}>\n"));
         points_col.push_str(&format!(

@@ -10,7 +10,7 @@ A Discord bot for playing **Rocket League Mafia**, built with Rust, [Poise](http
    * Gather players into a voice channel (**6 players** for standard 3v3, or **2 players** for 1v1 testing mode).
    * Run the `/new` slash command (or `!!new`).
 2. **Two Messages Only**:
-   * **Message 1 (Leaderboard)**: Displays the live standings in clean columns ordered by total points with medals (`🥇`, `🥈`, `🥉`).
+   * **Message 1 (Leaderboard)**: Displays the live standings in clean columns ordered by total points.
    * **Message 2 (Gameplay)**: Displays the active game state and interactive buttons.
    * All updates occur strictly by editing these two messages to keep the channel clean.
 3. **Secret Roles & Random Teams**:
