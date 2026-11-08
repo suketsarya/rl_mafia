@@ -64,16 +64,18 @@ Make sure the following **Privileged Gateway Intents** are enabled in the [Disco
 * **Server Members Intent** (`GUILD_MEMBERS`)
 * **Message Content Intent** (`MESSAGE_CONTENT`)
 
-### Environment Variable / Token File
-You can provide your Discord Bot Token in either of two ways:
-1. Environment variable:
-   ```bash
-   export DISCORD_TOKEN="your_bot_token_here"
-   ```
-2. Or in `src/BotToken.txt`:
-   ```text
-   your_bot_token_here
-   ```
+### Environment Variable / Token
+You can provide your Discord Bot Token via a `.env` file or directly as an environment variable.
+**Using a `.env` file** (recommended for local development):
+```bash
+DISCORD_TOKEN="your_bot_token_here"
+TEST_GUILD_ID="123456789012345678"   # your private testing server ID
+```
+**Using an environment variable** (useful in production or Docker):
+```bash
+export DISCORD_TOKEN="your_bot_token_here"
+```
+The token is the same across all guilds; once the bot is invited to a server it will operate there automatically.
 
 ### Running the Bot
 ```bash

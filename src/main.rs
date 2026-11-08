@@ -2,7 +2,7 @@ pub mod mafia;
 
 use mafia::GameSession;
 use poise::{serenity_prelude as serenity, PrefixFrameworkOptions};
-use serenity::all::{ChannelId, CreateMessage, UserId};
+use serenity::all::{ChannelId, CreateMessage, GuildId, UserId};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -10,6 +10,7 @@ use tokio::sync::Mutex;
 /// Shared application state across command invocations.
 pub struct Data {
     pub active_channels: Arc<Mutex<HashSet<ChannelId>>>,
+    pub test_guild_id: Option<GuildId>,
 }
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
@@ -146,15 +147,19 @@ async fn new(ctx: Context<'_>) -> Result<(), Error> {
     }
 
     let size = player_ids.len();
-    if size != 2 && size != 6 {
-        let mentions: Vec<String> = player_ids.iter().map(|id| format!("<@{id}>")).collect();
+    // Is this the designated test guild?
+    let is_test_guild = match ctx.guild() {
+        Some(g) => Some(g.id) == ctx.data().test_guild_id,
+        None => false,
+    };
+    // Only 6 players, unless it’s the test guild (allows 2)
+    if size != 6 && !(size == 2 && is_test_guild) {
         let msg = format!(
-            "❌ Rocket League Mafia requires exactly **6 players** (3v3) or **2 players** (1v1 testing mode).\n\
-             Found **{size}** player(s) in your voice channel: {}",
-            if mentions.is_empty() {
-                "None".to_string()
+            "❌ Rocket League Mafia requires exactly **6 players** (3v3){}",
+            if is_test_guild {
+                " (this server allows a 2-player test mode)"
             } else {
-                mentions.join(", ")
+                ""
             }
         );
         ctx.say(msg).await?;
@@ -231,6 +236,12 @@ async fn new(ctx: Context<'_>) -> Result<(), Error> {
 async fn main() {
     // Load .env file (if present) so DISCORD_TOKEN can be defined there.
     dotenv::dotenv().ok();
+    // Retrieve the test guild ID (if any) from the environment.
+    let test_guild_id = std::env::var("TEST_GUILD_ID")
+        .ok()
+        .and_then(|s| s.parse::<u64>().ok())
+        .map(GuildId::new);
+
     // Retrieve the bot token from the DISCORD_TOKEN environment variable.
     // The bot token is the same across all guilds; once the bot is invited to a server,
     // it will operate there automatically. If the variable is missing, abort with a clear message.
@@ -252,7 +263,6 @@ async fn main() {
     };
 
     let active_channels = Arc::new(Mutex::new(HashSet::new()));
-    let active_channels_clone = active_channels.clone();
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
@@ -260,12 +270,15 @@ async fn main() {
             prefix_options,
             ..Default::default()
         })
-        .setup(|ctx, _ready, framework| {
+        .setup(move |ctx, _ready, framework| {
+            let test_id = test_guild_id.clone();
+            let active_clone = active_channels.clone();
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 println!("Rocket League Mafia bot is ready!");
                 Ok(Data {
-                    active_channels: active_channels_clone,
+                    active_channels: active_clone,
+                    test_guild_id: test_id,
                 })
             })
         })
